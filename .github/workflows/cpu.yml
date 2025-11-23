@@ -16,7 +16,7 @@ jobs:
         server: [front, back]
 
     steps:
-      - name: "Check CPU ${{ matrix.server.name }} "
+      - name: "Check CPU ${{ matrix.server }} "
         id: check
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -24,11 +24,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           # watch the cpu and echo a message
           script: |
-            CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4}')
+            CPU=$(top -bn3 -d1 | grep "Cpu(s)" | tail -n1 | awk '{print $2 + $4}')
             echo "CPU usage: $CPU"
 
             if (( $(echo "$CPU > 50" | bc -l) )); then
-              echo "High CPU detected on ${{ matrix.server.name }}"
+              echo "High CPU detected on ${{ matrix.server }}"
               exit 1
             fi
 
@@ -42,11 +42,10 @@ jobs:
           secure: true
           username: ${{ secrets.ALERT_EMAIL }}
           password: ${{ secrets.ALERT_EMAIL_PASSWORD }}
-          subject: "High CPU on ${{ matrix.server.name }}"
+          subject: "High CPU on ${{ matrix.server }}"
           to: ${{ secrets.ALERT_EMAIL }}
           from: "Infra Monitor"
           body: |
             High CPU detected on server: ${{ matrix.server.name }}
             Host: ${{ matrix.server == 'front' && secrets.FRONTEND_IP || secrets.BACKEND_IP }}
-            Workflow: ${{ github.repository }}
-            Time: ${{ github.run_started_at }}
+            Workflow: ${{ github.repSository }}
