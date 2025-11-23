@@ -1,0 +1,62 @@
+name: CPU Alert
+
+on:
+# check the cpu every 5 min or run the file manual 
+  schedule:
+    - cron: "*/5 * * * *"   
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+# to execute the job more than one time on deffrient servers insted of make more job for each server
+    strategy:
+      matrix:
+        server: 
+          - {
+            name: "front", 
+            host: "${{ secrets.FRONTEND_IP }}", 
+            key: "${{ secrets.EC2_SSH_KEY }}"
+            }
+          - {
+            name: "back", 
+            host: "${{ secrets.BACKEND_IP }}", 
+            key: "${{ secrets.EC2_SSH_KEY }}"
+            }
+
+    steps:
+      - name: "Check CPU ${{ matrix.server.name }} "
+        id: check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ matrix.server.host }}
+          key: ${{ matrix.server.key }}
+          # watch the cpu and echo a message
+          script: |
+            CPU=$(top -bn1 | grep "Cpu(s)" | awk '{print $2 + $4}')
+            echo "CPU usage: $CPU"
+
+            if (( $(echo "$CPU > 50" | bc -l) )); then
+              echo "High CPU detected on ${{ matrix.server.name }}"
+              exit 1
+            fi
+
+      # if cpu > 50 do the Alert job
+      - name: Alert 
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.ALERT_EMAIL }}
+          password: ${{ secrets.ALERT_EMAIL_PASSWORD }}
+          subject: "High CPU on ${{ matrix.server.name }}"
+          to: ${{ secrets.ALERT_EMAIL }}
+          from: "Infra Monitor"
+          body: |
+            High CPU detected on server: ${{ matrix.server.name }}
+            Host: ${{ matrix.server.host }}
+            Workflow: ${{ github.repository }}
+            Time: ${{ github.run_started_at }}
