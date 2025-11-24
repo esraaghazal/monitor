@@ -22,6 +22,9 @@ jobs:
         with:
           host: ${{ matrix.server == 'front' && secrets.FRONTEND_IP || secrets.BACKEND_IP }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          username: ubuntu 
+          host_fingerprint: ${{ matrix.server == 'front' && secrets.FRONTEND_FINGERPRINT || secrets.BACKEND_FINGERPRINT }}
+
           # watch the cpu and echo a message
           script: |
             CPU=$(top -bn3 -d1 | grep "Cpu(s)" | tail -n1 | awk '{print $2 + $4}')
@@ -46,6 +49,6 @@ jobs:
           to: ${{ secrets.ALERT_EMAIL }}
           from: "Infra Monitor"
           body: |
-            High CPU detected on server: ${{ matrix.server.name }}
+            High CPU detected on server: ${{ matrix.server }}
             Host: ${{ matrix.server == 'front' && secrets.FRONTEND_IP || secrets.BACKEND_IP }}
             Workflow: ${{ github.repSository }}
