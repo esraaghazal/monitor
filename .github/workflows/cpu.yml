@@ -31,17 +31,10 @@ jobs:
             echo "CPU usage: $CPU"
 
             if (( $(echo "$CPU > 50" | bc -l) )); then
-              echo "cpu_high=true" >> output.txt
+              echo "CPU_HIGH=true" >> $GITHUB_ENV
             else
-              echo "cpu_high=false" >> output.txt
-            fi
+              echo "CPU_HIGH=false" >> $GITHUB_ENV
           script_stop: false
-
-      - name: Read CPU Flag
-        id: read
-        run: |
-          cat output.txt
-          echo "CPU_HIGH=$(grep cpu_high output.txt | cut -d '=' -f2)" >> $GITHUB_ENV
 
 
       # if cpu > 50 do the Alert job
