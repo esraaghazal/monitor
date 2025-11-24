@@ -31,13 +31,22 @@ jobs:
             echo "CPU usage: $CPU"
 
             if (( $(echo "$CPU > 50" | bc -l) )); then
-              echo "High CPU detected on ${{ matrix.server }}"
-              exit 1
+              echo "cpu_high=true" >> output.txt
+            else
+              echo "cpu_high=false" >> output.txt
             fi
+          script_stop: false
+
+        - name: Read CPU Flag
+          id: read
+          run: |
+            cat output.txt
+            echo "CPU_HIGH=$(grep cpu_high output.txt | cut -d '=' -f2)" >> $GITHUB_ENV
+
 
       # if cpu > 50 do the Alert job
       - name: Alert 
-        if: failure()
+        if: env.CPU_HIGH == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
