@@ -42,8 +42,9 @@ jobs:
       - name: Set CPU flag
         id: set_flag
         run: |
-          CPU_FLAG=$(cat /tmp/cpu_flag.txt | cut -d '=' -f2)
+          CPU_FLAG=$(cat /tmp/cpu_flag.txt | cut -d '=' -f2 | tr -d '[:space:]')
           echo "CPU_HIGH=$CPU_FLAG" >> $GITHUB_ENV
+
 
 
 
