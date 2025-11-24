@@ -34,6 +34,7 @@ jobs:
               echo "CPU_HIGH=true" >> $GITHUB_ENV
             else
               echo "CPU_HIGH=false" >> $GITHUB_ENV
+            fi
           script_stop: false
 
 
