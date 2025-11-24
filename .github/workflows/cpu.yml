@@ -23,7 +23,7 @@ jobs:
           host: ${{ matrix.server == 'front' && secrets.FRONTEND_IP || secrets.BACKEND_IP }}
           key: ${{ secrets.EC2_SSH_KEY }}
           username: ubuntu 
-          host_fingerprint: ${{ matrix.server == 'front' && secrets.FRONTEND_FINGERPRINT || secrets.BACKEND_FINGERPRINT }}
+          fingerprint: ${{ matrix.server == 'front' && secrets.FRONTEND_FINGERPRINT || secrets.BACKEND_FINGERPRINT }}
 
           # watch the cpu and echo a message
           script: |
@@ -31,11 +31,20 @@ jobs:
             echo "CPU usage: $CPU"
 
             if (( $(echo "$CPU > 50" | bc -l) )); then
-              echo "CPU_HIGH=true" >> $GITHUB_ENV
+              echo "CPU_HIGH=true" >> /tmp/cpu_flag.txt
             else
-              echo "CPU_HIGH=false" >> $GITHUB_ENV
+              echo "CPU_HIGH=false" >> /tmp/cpu_flag.txt
             fi
-          script_stop: false
+        continue-on-error: true
+        env:
+          SERVER: ${{ matrix.server }}
+      
+      - name: Set CPU flag
+        id: set_flag
+        run: |
+          CPU_FLAG=$(cat /tmp/cpu_flag.txt | cut -d '=' -f2)
+          echo "CPU_HIGH=$CPU_FLAG" >> $GITHUB_ENV
+
 
 
       # if cpu > 50 do the Alert job
@@ -54,4 +63,4 @@ jobs:
           body: |
             High CPU detected on server: ${{ matrix.server }}
             Host: ${{ matrix.server == 'front' && secrets.FRONTEND_IP || secrets.BACKEND_IP }}
-            Workflow: ${{ github.repSository }}
+            Workflow: ${{ github.repository  }}
