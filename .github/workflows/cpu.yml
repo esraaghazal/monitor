@@ -37,11 +37,11 @@ jobs:
             fi
           script_stop: false
 
-        - name: Read CPU Flag
-          id: read
-          run: |
-            cat output.txt
-            echo "CPU_HIGH=$(grep cpu_high output.txt | cut -d '=' -f2)" >> $GITHUB_ENV
+      - name: Read CPU Flag
+        id: read
+        run: |
+          cat output.txt
+          echo "CPU_HIGH=$(grep cpu_high output.txt | cut -d '=' -f2)" >> $GITHUB_ENV
 
 
       # if cpu > 50 do the Alert job
